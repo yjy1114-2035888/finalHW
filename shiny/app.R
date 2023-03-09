@@ -5,11 +5,8 @@ library(readr)
 
 squirrel_data <- read_csv("2018_Central_Park_Squirrel_Census_-_Squirrel_Data.csv")
 
-# Define UI for Shiny app
 ui <- fluidPage(
-  # Create tabsetPanel for opening page
   tabsetPanel(
-    # General information about dataset
     tabPanel("About",
              p("This dataset contains data from the ", strong("2018 Central Park Squirrel Census"), ". The census was conducted by the Squirrel Census organization, with the goal of understanding the distribution and behavior of Eastern gray squirrels in Central Park."),
              p("The dataset includes information on the location, date, age, and behavior of each squirrel observed during the census."),
@@ -48,13 +45,11 @@ ui <- fluidPage(
 
 server <- function(input, output) {
   
-  # Filter data based on user input
   filtered_data <- reactive({
     squirrel_data %>% 
       filter(if(input$color == "All") TRUE else `Primary Fur Color` == !!input$color)
   })
   
-  # Create plot
   output$scatterplot <- renderPlot({
     filtered_data() %>% 
       ggplot(aes(x = X, y = Y, color = `Primary Fur Color`)) +
@@ -62,24 +57,20 @@ server <- function(input, output) {
       labs(x = "Longitude", y = "Latitude", title = "Squirrel Sightings in Central Park") +
       guides(color = guide_legend(title = "Fur Color"))
   })
-  
-  # Create text output for scatterplot page
+
   output$summary <- renderText({
     paste("Selected subset contains", nrow(filtered_data()), "observations.")
   })
   
-  # Create table output for table page
   output$squirrel_table <- renderTable({
     filtered_data() %>% 
       select(input$variable) %>% 
       sample_n(input$sample_size)
   })
   
-  # Create text output for table page
   output$table_summary <- renderText({
     paste("Showing", input$sample_size, "random observations for the variable", input$variable, ".")
   })
 }
 
-# Run the Shiny app
 shinyApp(ui = ui, server = server)
